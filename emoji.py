@@ -3,6 +3,7 @@ from tkinter import *
 import cv2 
 from PIL import Image, ImageTk
 import os
+from cv2 import CAP_V4L2
 import numpy as np
 import cv2 
 from keras.models import Sequential 
@@ -65,60 +66,67 @@ global last_frame1
 last_frame1 = np.zeros((480, 640, 3), dtype=np.uint8)
 global cap1 
 show_text = [0]
-global frame_number
 
 def show_subject(): 
     #Open webcam
-    cap1 = cv2.VideoCapture(-1)
-    print(cap1)
-    #cap1 = cv2.VideoCapture('test_videos/Alexa_White.mp4')
-        
+    cap1 = cv2.VideoCapture(0)
+
     if not cap1.isOpened():
         print("Can't find the camera")
-    #Do not create local variable 
-    global frame_number
-    #Max number of frames so know when to exit
-    length = int(cap1.get(cv2.CAP_PROP_FRAME_COUNT))
-    frame_number += 1 
-    if frame_number >= length:
-        exit()
-    cap1.set(1, frame_number)
 
-    #Flag if read something, frame is actual frame
-    flag1, frame1 = cap1.read()
-    #Resize 
-    frame1 = cv2.resize(frame1, (600,500))
-    #Represent box around face of person 
-    bounding_box = cv2.CascadeClassifier('/home/emma/anaconda3/lib/python3.9/site-packages/cv2/data/haarcascade_frontalface_default.xml')
-    gray_frame = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
-    #Adjust scaleFactor and minNeighbors for prediction accuracy 
-    num_faces = bounding_box.detectMultiScale(gray_frame, scaleFactor = 1.1, minNeighbors=7)
-    for (x, y, w, h) in num_faces:
-        cv2.rectangle(frame1, (x, y-50), (x+w, y+h+10), (255, 0, 0), 2)
-        roi_gray_frame = gray_frame[y:y+h, x:x+w]
-        cropped_img = np.expand_dims(np.expand_dims(cv2.resize(roi_gray_frame, (48, 48)), -1), 0)
-        prediction = emotion_model.predict(cropped_img)
-        maxindex = int(np.argmax(prediction))
-        cv2.putText(frame1, emotion_dict[maxindex], (x+20, y-60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-        show_text[0]=maxindex
-    if flag1 is None:
-        print("Major error!")
-    elif flag1:
-        global last_frame1
-        last_frame1 = frame1.copy()
-        pic = cv2.cvtColor(last_frame1, cv2.COLOR_BGR2RGB)
-        img = Image.fromarray(pic)
-        imgtk = ImageTk.PhotoImage(image=img)
-        lmain.imgtk = imgtk
-        lmain.configure(image=imgtk)
-        root.update()
-        lmain.after(10, show_subject)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        exit()
+    while(True):
+	
+        # Capture the video frame by frame, flag1 returns frame status 
+        flag1, frame1 = cap1.read()
+
+        # Display the resulting frame
+        cv2.imshow('frame', frame1)
+
+        #Resize 
+        frame1 = cv2.resize(frame1, (600,500))
+
+        #Represent box around face of person 
+        bounding_box = cv2.CascadeClassifier('C:\Emojify\data\haarcascade_frontalface_default.xml')
+        gray_frame = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
+
+        #Adjust scaleFactor and minNeighbors for prediction accuracy 
+        num_faces = bounding_box.detectMultiScale(gray_frame, scaleFactor = 1.1, minNeighbors=7)
+        for (x, y, w, h) in num_faces:
+            cv2.rectangle(frame1, (x, y-50), (x+w, y+h+10), (255, 0, 0), 2)
+            roi_gray_frame = gray_frame[y:y+h, x:x+w]
+            cropped_img = np.expand_dims(np.expand_dims(cv2.resize(roi_gray_frame, (48, 48)), -1), 0)
+            prediction = emotion_model.predict(cropped_img)
+            maxindex = int(np.argmax(prediction))
+            cv2.putText(frame1, emotion_dict[maxindex], (x+20, y-60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2, cv2.LINE_AA)
+            show_text[0]=maxindex
+        
+        if flag1 is None:
+            print("Major error!")
+        elif flag1:
+            global last_frame1
+            last_frame1 = frame1.copy()
+            pic = cv2.cvtColor(last_frame1, cv2.COLOR_BGR2RGB)
+            img = Image.fromarray(pic)
+            imgtk = ImageTk.PhotoImage(image=img)
+            lmain.imgtk = imgtk
+            lmain.configure(image=imgtk)
+            root.update()
+            lmain.after(10, show_subject)
+            
+        # press 'q' button to quit webcam
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # After loop release webcam to be used in this program
+    cap1.release()
+    # Destroy all the windows
+    cv2.destroyAllWindows()
+    #Never prints bc webcam not released 
+    print('webcam destroyed')
 
 def show_avatar():
     frame2 = cv2.imread(emoji_dist[show_text[0]])
-    pic2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2RGB)
+    #pic2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2RGB)
     img2 = Image.fromarray(frame2)
     imgtk2 = ImageTk.PhotoImage(image=img2)
     lmain2.imgtk2 = imgtk2
@@ -135,7 +143,7 @@ if __name__ == '__main__':
     #Create labels to contain images/video
     lmain = tk.Label(master = root, padx = 50, bd = 10)
     lmain2 = tk.Label(master = root, bd = 25)
-    #Quitting button
+    #Quit button for entire program
     lmain3 = tk.Label(master=root, bd = 20, fg = "#CDCDCD", bg = 'blue', font=("Arial", 30))
     
     #Packing and placing in location 
@@ -149,6 +157,7 @@ if __name__ == '__main__':
     root.title("Translating Realtime Human Facial Expressions to an Emoji using a Trained CNN")
     root.geometry("1400x900+100+10")
     root['bg'] = 'black'
+    #How when click quit button to also quit webcam? 
     exitButton = Button(root, text = 'Quit', fg = "red", command = root.destroy, font = ('arial', 30, 'bold')).pack(side = BOTTOM)
 
     #Threading allows for parallel computing 
