@@ -1,4 +1,4 @@
-#1 Project Goals/Description
+<h2>#1 Project Goals/Description</h2>
 
 The goal of this project is to create a model capable of detecting human emotion through a realtime web cam and match the expression with a corresponding emoji.
 
@@ -8,7 +8,7 @@ We are going to create a machine learning algorithm, specifically a Convolutiona
 
 <img width="868" alt="image" src="https://github.com/e-shen2022/FaceToEmoji_CNN/assets/104966589/4eb0b235-50ab-45a8-a304-d43b34b99fc4">
 
-#2 Tool/Environment Setup
+<h2>#2 Tool/Environment Setup</h2>
 
 Some tools/topics covered
 
