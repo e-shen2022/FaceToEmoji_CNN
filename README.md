@@ -44,4 +44,15 @@ Tensorflow: A very useful tool for machine learning. Takes data, builds a model,
 
 Keras: A high-level neural networks API integrated into Tensorflow
 
+<h2>#3 Brief summary of implementation steps</h2>
+- Import packages and data preprocessing 
+- Train data
+- Create model
+- Train model 
+- Create personalized emojis
+- Implement Graphic-User Interface 
+- Testing & Improve Accuracy 
+For detailed blog check this out! https://github.com/e-shen2022/APCS_Blog/blob/master/_notebooks/2023-05-14-N%40M.ipynb
+
+
 
